@@ -63,32 +63,53 @@ if (contactForm) {
     });
 }
 
-// Add parallax effect to hero section
-window.addEventListener('scroll', () => {
+// Consolidated scroll handler with throttling
+let scrollTimeout;
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+const hero = document.querySelector('.hero');
+
+function handleScroll() {
     const scrolled = window.pageYOffset;
-    const hero = document.querySelector('.hero');
     
+    // Parallax effect for hero section
     if (hero && scrolled < window.innerHeight) {
         hero.style.transform = `translateY(${scrolled * 0.5}px)`;
         hero.style.opacity = 1 - (scrolled / window.innerHeight);
     }
-});
-
-// Animated counter for stats (if we add stats section later)
-function animateCounter(element, target, duration = 2000) {
-    let start = 0;
-    const increment = target / (duration / 16);
     
-    const timer = setInterval(() => {
-        start += increment;
-        if (start >= target) {
-            element.textContent = target;
-            clearInterval(timer);
-        } else {
-            element.textContent = Math.floor(start);
+    // Active navigation state
+    let current = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (scrolled >= sectionTop - 100) {
+            current = section.getAttribute('id');
         }
-    }, 16);
+    });
+    
+    navLinks.forEach(link => {
+        link.style.color = '';
+        if (link.getAttribute('href') === `#${current}`) {
+            link.style.color = '#667eea';
+        }
+    });
+    
+    // Scroll progress indicator
+    const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrollProgress = (scrolled / windowHeight) * 100;
+    const indicator = document.getElementById('scroll-indicator');
+    if (indicator) {
+        indicator.style.width = scrollProgress + '%';
+    }
 }
+
+// Throttle scroll events
+window.addEventListener('scroll', () => {
+    if (scrollTimeout) {
+        window.cancelAnimationFrame(scrollTimeout);
+    }
+    scrollTimeout = window.requestAnimationFrame(handleScroll);
+});
 
 // Add ripple effect to buttons
 document.querySelectorAll('.btn-neumorphic').forEach(button => {
@@ -222,6 +243,7 @@ function typeWriter(element, text, speed = 100) {
 // Add scroll progress indicator
 const createScrollIndicator = () => {
     const indicator = document.createElement('div');
+    indicator.id = 'scroll-indicator';
     indicator.style.cssText = `
         position: fixed;
         top: 0;
@@ -231,49 +253,16 @@ const createScrollIndicator = () => {
         z-index: 10000;
         transition: width 0.1s ease;
         border-radius: 0 3px 3px 0;
+        width: 0;
     `;
     document.body.appendChild(indicator);
-    
-    window.addEventListener('scroll', () => {
-        const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (window.pageYOffset / windowHeight) * 100;
-        indicator.style.width = scrolled + '%';
-    });
 };
 
 createScrollIndicator();
 
-// Add active state to navigation on scroll
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.nav-link');
-
-window.addEventListener('scroll', () => {
-    let current = '';
-    
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        const sectionHeight = section.clientHeight;
-        
-        if (window.pageYOffset >= sectionTop - 100) {
-            current = section.getAttribute('id');
-        }
-    });
-    
-    navLinks.forEach(link => {
-        link.style.color = '';
-        if (link.getAttribute('href') === `#${current}`) {
-            link.style.color = '#667eea';
-        }
-    });
-});
-
 // Add loading animation
 window.addEventListener('load', () => {
-    document.body.style.opacity = '0';
-    setTimeout(() => {
-        document.body.style.transition = 'opacity 0.5s ease';
-        document.body.style.opacity = '1';
-    }, 100);
+    document.body.style.opacity = '1';
 });
 
 // Input focus animations
@@ -298,6 +287,8 @@ document.querySelectorAll('.social-link').forEach(link => {
     });
 });
 
-// Console message for developers
-console.log('%c🚀 MTweb - Built with Neumorphic Design', 'font-size: 20px; color: #667eea; font-weight: bold;');
-console.log('%cInterested in our work? Contact us!', 'font-size: 14px; color: #764ba2;');
+// Development console messages
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('%c🚀 MTweb - Built with Neumorphic Design', 'font-size: 20px; color: #667eea; font-weight: bold;');
+    console.log('%cInterested in our work? Contact us!', 'font-size: 14px; color: #764ba2;');
+}
