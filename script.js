@@ -31,6 +31,73 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => {
     observer.observe(el);
 });
 
+// Hero image center click effect with particle burst
+const heroImageCenter = document.querySelector('.hero-image-center');
+if (heroImageCenter) {
+    heroImageCenter.addEventListener('click', function(e) {
+        // Pulse animation
+        this.style.animation = 'none';
+        setTimeout(() => {
+            this.style.animation = 'float-center 7s ease-in-out infinite, hero-image-click 0.4s ease-out';
+        }, 10);
+        
+        // Create particle burst effect
+        for (let i = 0; i < 12; i++) {
+            const particle = document.createElement('div');
+            const angle = (i / 12) * Math.PI * 2;
+            const velocity = 150 + Math.random() * 100;
+            const x = Math.cos(angle) * velocity;
+            const y = Math.sin(angle) * velocity;
+            
+            particle.style.cssText = `
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                pointer-events: none;
+                left: 50%;
+                top: 50%;
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+                z-index: 100;
+            `;
+            
+            this.appendChild(particle);
+            
+            particle.animate([
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                { transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(0)`, opacity: 0 }
+            ], {
+                duration: 800 + Math.random() * 400,
+                easing: 'cubic-bezier(0, 0.5, 0.5, 1)'
+            }).onfinish = () => particle.remove();
+        }
+        
+        // Create expanding ring
+        const ring = document.createElement('div');
+        ring.style.cssText = `
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(102, 126, 234, 0.6);
+            border-radius: 30px;
+            pointer-events: none;
+            left: 0;
+            top: 0;
+            z-index: 99;
+        `;
+        this.appendChild(ring);
+        
+        ring.animate([
+            { transform: 'scale(1)', opacity: 0.8 },
+            { transform: 'scale(1.5)', opacity: 0 }
+        ], {
+            duration: 600,
+            easing: 'ease-out'
+        }).onfinish = () => ring.remove();
+    });
+}
+
 // Form submission handler
 const contactForm = document.querySelector('.contact-form');
 if (contactForm) {
@@ -68,9 +135,15 @@ let scrollTimeout;
 const sections = document.querySelectorAll('section[id]');
 const navLinks = document.querySelectorAll('.nav-link');
 const hero = document.querySelector('.hero');
+const heroBackground = document.querySelector('.hero-background');
 
 function handleScroll() {
     const scrolled = window.pageYOffset;
+    
+    // Parallax effect for hero background image - floats slower than content
+    if (heroBackground && scrolled < window.innerHeight * 1.5) {
+        heroBackground.style.transform = `translateY(${scrolled * 0.3}px) scale(1.05)`;
+    }
     
     // Parallax effect for hero section
     if (hero && scrolled < window.innerHeight) {
