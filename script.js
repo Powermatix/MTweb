@@ -12,6 +12,21 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
+// Hide scroll arrow on scroll
+const scrollArrow = document.querySelector('.scroll-down-arrow');
+if (scrollArrow) {
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        if (scrolled > 100) {
+            scrollArrow.style.opacity = '0';
+            scrollArrow.style.pointerEvents = 'none';
+        } else {
+            scrollArrow.style.opacity = '1';
+            scrollArrow.style.pointerEvents = 'auto';
+        }
+    });
+}
+
 // Intersection Observer for scroll animations
 const observerOptions = {
     threshold: 0.1,
@@ -364,4 +379,87 @@ document.querySelectorAll('.social-link').forEach(link => {
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     console.log('%c🚀 MTweb - Built with Neumorphic Design', 'font-size: 20px; color: #667eea; font-weight: bold;');
     console.log('%cInterested in our work? Contact us!', 'font-size: 14px; color: #764ba2;');
+}
+
+// Sticky Timeline Scroll Interaction
+const initStickyTimeline = () => {
+    const timelineSteps = document.querySelectorAll('.timeline-step');
+    const timelineSlides = document.querySelectorAll('.timeline-slide');
+    const progressBar = document.querySelector('.progress-bar');
+    const servicesSection = document.querySelector('.services-sticky');
+
+    if (!timelineSteps.length || !timelineSlides.length || !servicesSection) return;
+
+    let currentStep = 0;
+
+    // Update active step based on scroll position
+    const updateTimeline = () => {
+        const sectionTop = servicesSection.offsetTop;
+        const sectionHeight = servicesSection.offsetHeight;
+        const scrolled = window.pageYOffset;
+
+        // Calculate progress within the section
+        const sectionProgress = (scrolled - sectionTop) / sectionHeight;
+
+        if (sectionProgress >= 0 && sectionProgress <= 1) {
+            // Determine which step should be active
+            const stepIndex = Math.floor(sectionProgress * timelineSlides.length);
+            const clampedStep = Math.max(0, Math.min(stepIndex, timelineSlides.length - 1));
+
+            if (clampedStep !== currentStep) {
+                currentStep = clampedStep;
+                activateStep(currentStep);
+            }
+
+            // Update progress bar
+            if (progressBar) {
+                const progress = (sectionProgress * 100);
+                progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+            }
+        }
+    };
+
+    // Activate a specific step
+    const activateStep = (stepIndex) => {
+        // Remove active class from all steps
+        timelineSteps.forEach(step => step.classList.remove('active'));
+
+        // Add active class to current step
+        if (timelineSteps[stepIndex]) {
+            timelineSteps[stepIndex].classList.add('active');
+        }
+    };
+
+    // Click handler for timeline steps
+    timelineSteps.forEach((step, index) => {
+        step.addEventListener('click', () => {
+            const targetSlide = timelineSlides[index];
+            if (targetSlide) {
+                const slideTop = targetSlide.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({
+                    top: slideTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Throttled scroll handler for timeline
+    let timelineScrollTimeout;
+    window.addEventListener('scroll', () => {
+        if (timelineScrollTimeout) {
+            window.cancelAnimationFrame(timelineScrollTimeout);
+        }
+        timelineScrollTimeout = window.requestAnimationFrame(updateTimeline);
+    });
+
+    // Initial update
+    updateTimeline();
+};
+
+// Initialize timeline after DOM loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStickyTimeline);
+} else {
+    initStickyTimeline();
 }
